@@ -1,0 +1,172 @@
+debian-jessie:
+  stage: build
+  image: debian:jessie
+  script:
+    - apt-get update
+    - apt-get install -y dpkg-dev devscripts wget git dh-make build-essential autoconf autotools-dev quilt pkg-config libsnmp-dev libmysqlclient-dev libpq-dev libsqlite3-dev libcurl4-openssl-dev libldap2-dev libiksemel-dev libopenipmi-dev libssh2-1-dev unixodbc-dev openjdk-7-jdk libxml2-dev libpcre3-dev libevent-dev libssl-dev lftp curl
+    - wget -q https://$CI_DOMAIN/build/debian/jessie/debian.tar.xz
+    - tar -xvf debian.tar.xz
+    - dch -v "1:4.2.4-1+glaber~${CI_COMMIT_TAG}" --distribution "jessie" "all latest updates"
+    - sed -i "s/.*GLABER_VERSION.*/define('GLABER_VERSION', '${CI_COMMIT_TAG}');/g" frontends/php/include/defines.inc.php
+    - sed -i "s/.*GLABER_VERSION.*/#define GLABER_VERSION \"${CI_COMMIT_TAG}\"/g" include/version.h 
+    - cat frontends/php/include/defines.inc.php
+    - cat include/version.h
+    - autoreconf -fvi
+    - dpkg-buildpackage -b
+    - mkdir -p pkgs/jessie/
+    - mv ../*.deb pkgs/jessie/
+    - cd pkgs
+    - ls jessie
+    - lftp -e "set ssl:verify-certificate no; set sftp:auto-confirm yes; open sftp://$CI_USER:$CI_PASS@$CI_DOMAIN:$CI_PORT; mirror -P 10 --use-pget-n=10 -X .* -X .*/ --reverse --verbose jessie/ debian/jessie/; bye"
+    - curl "https://api.telegram.org/bot$CI_TG_TOKEN/sendMessage?chat_id=$CI_TG_CHAT_ID&text=$(date +%Y%m%d-%H%M%S) Packages for JESSIE were uploaded on $CI_DOMAIN!" > /dev/null 2>&1
+
+  only:
+    - tags
+
+debian-stretch:
+  stage: build
+  image: debian:stretch
+  script:
+    - apt-get update
+    - apt-get install -y lftp ssh dpkg-dev devscripts wget dh-make build-essential autoconf autotools-dev quilt pkg-config libsnmp-dev default-libmysqlclient-dev libpq-dev libsqlite3-dev libcurl4-openssl-dev libldap2-dev libiksemel-dev libopenipmi-dev libssh2-1-dev unixodbc-dev openjdk-8-jdk libxml2-dev libpcre3-dev libevent-dev libssl-dev tar xz-utils curl
+    - wget -q https://$CI_DOMAIN/build/debian/stretch/debian.tar.xz
+    - tar -xvf debian.tar.xz
+    - dch -v "1:4.2.4-1+glaber~${CI_COMMIT_TAG}" --distribution "stretch" "all latest updates"
+    - sed -i "s/.*GLABER_VERSION.*/define('GLABER_VERSION', '${CI_COMMIT_TAG}');/g" frontends/php/include/defines.inc.php
+    - sed -i "s/.*GLABER_VERSION.*/#define GLABER_VERSION \"${CI_COMMIT_TAG}\"/g" include/version.h
+    - autoreconf -fvi
+    - dpkg-buildpackage -b
+    - mkdir -p pkgs/stretch/
+    - mv ../*.deb pkgs/stretch/
+    - cd pkgs
+    - lftp -e "set ssl:verify-certificate no; set sftp:auto-confirm yes; open sftp://$CI_USER:$CI_PASS@$CI_DOMAIN:$CI_PORT; mirror -P 10 --use-pget-n=10 -X .* -X .*/ --reverse --verbose stretch/ debian/stretch/; bye"
+    - curl "https://api.telegram.org/bot$CI_TG_TOKEN/sendMessage?chat_id=$CI_TG_CHAT_ID&text=$(date +%Y%m%d-%H%M%S) Packages for STRETCH were uploaded on $CI_DOMAIN!" > /dev/null 2>&1
+
+  only:
+    - tags
+
+debian-buster:
+  stage: build
+  image: debian:buster
+  script:
+    - apt-get update
+    - apt-get install -y lftp ssh dpkg-dev devscripts wget dh-make build-essential autoconf autotools-dev quilt pkg-config libsnmp-dev default-libmysqlclient-dev libpq-dev libsqlite3-dev libcurl4-openssl-dev libldap2-dev libiksemel-dev libopenipmi-dev libssh2-1-dev unixodbc-dev default-jdk libxml2-dev libpcre3-dev libevent-dev libssl-dev tar xz-utils curl
+    - wget -q https://$CI_DOMAIN/build/debian/buster/debian.tar.xz
+    - tar -xvf debian.tar.xz
+    - dch -v "1:4.2.4-1+glaber~${CI_COMMIT_TAG}" --distribution "buster" "all latest updates"
+    - sed -i "s/.*GLABER_VERSION.*/define('GLABER_VERSION', '${CI_COMMIT_TAG}');/g" frontends/php/include/defines.inc.php
+    - sed -i "s/.*GLABER_VERSION.*/#define GLABER_VERSION \"${CI_COMMIT_TAG}\"/g" include/version.h
+    - autoreconf -fvi
+    - dpkg-buildpackage -b
+    - mkdir -p pkgs/buster/
+    - mv ../*.deb pkgs/buster/
+    - cd pkgs
+    - lftp -e "set ssl:verify-certificate no; set sftp:auto-confirm yes; open sftp://$CI_USER:$CI_PASS@$CI_DOMAIN:$CI_PORT; mirror -P 10 --use-pget-n=10 -X .* -X .*/ --reverse --verbose buster/ debian/buster/; bye"
+    - curl "https://api.telegram.org/bot$CI_TG_TOKEN/sendMessage?chat_id=$CI_TG_CHAT_ID&text=$(date +%Y%m%d-%H%M%S) Packages for BUSTER were uploaded on $CI_DOMAIN!" > /dev/null 2>&1
+
+  only:
+    - tags
+
+ubuntu-disco:
+  stage: build
+  image: ubuntu:disco
+  script:
+    - apt-get update
+    - apt-get install -y lftp ssh dpkg-dev devscripts wget dh-make build-essential autoconf autotools-dev quilt pkg-config libsnmp-dev libmysqlclient-dev libpq-dev libsqlite3-dev libcurl4-openssl-dev libldap2-dev libiksemel-dev libopenipmi-dev libssh2-1-dev unixodbc-dev openjdk-8-jdk libxml2-dev libpcre3-dev libevent-dev libssl-dev tar xz-utils curl
+    - wget -q https://$CI_DOMAIN/build/ubuntu/disco/debian.tar.xz
+    - tar -xvf debian.tar.xz
+    - dch -v "1:4.2.4-1+glaber~${CI_COMMIT_TAG}" --distribution "disco" "all latest updates"
+    - sed -i "s/.*GLABER_VERSION.*/define('GLABER_VERSION', '${CI_COMMIT_TAG}');/g" frontends/php/include/defines.inc.php
+    - sed -i "s/.*GLABER_VERSION.*/#define GLABER_VERSION \"${CI_COMMIT_TAG}\"/g" include/version.h
+    - autoreconf -fvi
+    - dpkg-buildpackage -b
+    - mkdir -p pkgs/disco/
+    - mv ../*.deb pkgs/disco/
+    - cd pkgs
+    - lftp -e "set ssl:verify-certificate no; set sftp:auto-confirm yes; open sftp://$CI_USER:$CI_PASS@$CI_DOMAIN:$CI_PORT; mirror -P 10 --use-pget-n=10 -X .* -X .*/ --reverse --verbose disco/ ubuntu/disco/; bye"
+    - curl "https://api.telegram.org/bot$CI_TG_TOKEN/sendMessage?chat_id=$CI_TG_CHAT_ID&text=$(date +%Y%m%d-%H%M%S) Packages for DISCO were uploaded on $CI_DOMAIN!" > /dev/null 2>&1
+
+  only:
+    - tags
+
+ubuntu-bionic:
+  stage: build
+  image: ubuntu:bionic
+  script:
+    - apt-get update
+    - apt-get install -y lftp ssh dpkg-dev devscripts wget dh-make build-essential autoconf autotools-dev quilt pkg-config libsnmp-dev libmysqlclient-dev libpq-dev libsqlite3-dev libcurl4-openssl-dev libldap2-dev libiksemel-dev libopenipmi-dev libssh2-1-dev unixodbc-dev openjdk-8-jdk libxml2-dev libpcre3-dev libevent-dev libssl-dev tar xz-utils curl
+    - wget -q https://$CI_DOMAIN/build/ubuntu/bionic/debian.tar.xz
+    - tar -xvf debian.tar.xz
+    - dch -v "1:4.2.4-1+glaber~${CI_COMMIT_TAG}" --distribution "bionic" "all latest updates"
+    - sed -i "s/.*GLABER_VERSION.*/define('GLABER_VERSION', '${CI_COMMIT_TAG}');/g" frontends/php/include/defines.inc.php
+    - sed -i "s/.*GLABER_VERSION.*/#define GLABER_VERSION \"${CI_COMMIT_TAG}\"/g" include/version.h
+    - autoreconf -fvi
+    - dpkg-buildpackage -b
+    - mkdir -p pkgs/bionic/
+    - mv ../*.deb pkgs/bionic/
+    - cd pkgs
+    - lftp -e "set ssl:verify-certificate no; set sftp:auto-confirm yes; open sftp://$CI_USER:$CI_PASS@$CI_DOMAIN:$CI_PORT; mirror -P 10 --use-pget-n=10 -X .* -X .*/ --reverse --verbose bionic/ ubuntu/bionic/; bye"
+    - curl "https://api.telegram.org/bot$CI_TG_TOKEN/sendMessage?chat_id=$CI_TG_CHAT_ID&text=$(date +%Y%m%d-%H%M%S) Packages for BIONIC were uploaded on $CI_DOMAIN!" > /dev/null 2>&1
+
+  only:
+    - tags
+
+ubuntu-xenial:
+  stage: build
+  image: ubuntu:xenial
+  script:
+    - apt-get update
+    - apt-get install -y lftp ssh dpkg-dev devscripts wget dh-make build-essential autoconf autotools-dev quilt pkg-config libsnmp-dev libmysqlclient-dev libpq-dev libsqlite3-dev libcurl4-openssl-dev libldap2-dev libiksemel-dev libopenipmi-dev libssh2-1-dev unixodbc-dev openjdk-8-jdk libxml2-dev libpcre3-dev libevent-dev libssl-dev tar xz-utils curl
+    - wget -q https://$CI_DOMAIN/build/ubuntu/xenial/debian.tar.xz
+    - tar -xvf debian.tar.xz
+    - dch -v "1:4.2.4-1+glaber~${CI_COMMIT_TAG}" --distribution "xenial" "all latest updates"
+    - sed -i "s/.*GLABER_VERSION.*/define('GLABER_VERSION', '${CI_COMMIT_TAG}');/g" frontends/php/include/defines.inc.php
+    - sed -i "s/.*GLABER_VERSION.*/#define GLABER_VERSION \"${CI_COMMIT_TAG}\"/g" include/version.h
+    - autoreconf -fvi
+    - dpkg-buildpackage -b
+    - mkdir -p pkgs/xenial/
+    - mv ../*.deb pkgs/xenial/
+    - cd pkgs
+    - lftp -e "set ssl:verify-certificate no; set sftp:auto-confirm yes; open sftp://$CI_USER:$CI_PASS@$CI_DOMAIN:$CI_PORT; mirror -P 10 --use-pget-n=10 -X .* -X .*/ --reverse --verbose xenial/ ubuntu/xenial/; bye"
+    - curl "https://api.telegram.org/bot$CI_TG_TOKEN/sendMessage?chat_id=$CI_TG_CHAT_ID&text=$(date +%Y%m%d-%H%M%S) Packages for XENIAL were uploaded on $CI_DOMAIN!" > /dev/null 2>&1
+
+  only:
+    - tags
+
+centos:
+  stage: build
+  image: centos:7
+  script:
+    - yum install -y rpm-build yum-utils xz wget lftp ssh tar curl
+    - yum groupinstall "Development Tools" -y
+    - sed -i "s/.*GLABER_VERSION.*/define('GLABER_VERSION', '${CI_COMMIT_TAG}');/g" frontends/php/include/defines.inc.php
+    - sed -i "s/.*GLABER_VERSION.*/#define GLABER_VERSION \"${CI_COMMIT_TAG}\"/g" include/version.h
+    - wget -q -r -nH --cut-dirs=2 --no-parent --reject="index.html*" https://$CI_DOMAIN/rhel/7/other/
+    - yum install -y ./other/*.rpm
+    - rm -rf ./other/
+    - cd ..
+    - cp -R glaber zabbix-4.2.4      
+    - tar -czvf zabbix-4.2.4.tar.gz zabbix-4.2.4       
+    - mkdir -p glaber/build/centos/7/SOURCES/
+    - mkdir -p glaber/build/centos/7/SPECS/
+    - mkdir -p glaber/build/centos/7/temp/
+    - mv zabbix-4.2.4.tar.gz glaber/build/centos/7/SOURCES/zabbix-4.2.4.tar.gz
+    - cd glaber/build/centos/7/temp
+    - wget -q https://$CI_DOMAIN/build/centos/7/centos.src.rpm
+    - rpm2cpio ./centos.src.rpm | cpio -idmv
+    - sed -i "s/%{?alphatag:0.}1%{?alphatag}/%{?alphatag:0.}1%{?alphatag}.glaber.%{glaber_version}/g" zabbix.spec
+    - mv zabbix.spec ../SPECS/zabbix.spec
+    - rm zabbix-4.2.4.tar.gz
+    - mv ./* ../SOURCES/
+    - cd ..
+    - yum-builddep -y SPECS/zabbix.spec
+    - rpmbuild -bb SPECS/zabbix.spec --define "_sourcedir $PWD/SOURCES" --define "glaber_version ${CI_COMMIT_TAG}"
+    - cd ../../../
+    - mkdir -p pkgs/centos7/
+    - mv /root/rpmbuild/RPMS/* pkgs/centos7/
+    - cd pkgs
+    - lftp -e "set ssl:verify-certificate no; set sftp:auto-confirm yes; open sftp://$CI_USER:$CI_PASS@$CI_DOMAIN:$CI_PORT; mirror -P 10 --use-pget-n=10 -X .* -X .*/ --reverse --verbose centos7/ centos/7/; bye"
+    - curl "https://api.telegram.org/bot$CI_TG_TOKEN/sendMessage?chat_id=$CI_TG_CHAT_ID&text=$(date +%Y%m%d-%H%M%S) Packages for Centos-7 were uploaded on $CI_DOMAIN!" > /dev/null 2>&1
+
+  only:
+    - tags
